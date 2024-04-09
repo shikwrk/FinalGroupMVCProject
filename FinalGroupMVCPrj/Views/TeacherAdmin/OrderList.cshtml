@@ -1,0 +1,88 @@
+﻿@model OrderBasicViewModel
+@{
+    ViewData["Title"] = "LCreate";
+    Layout = "~/Views/Shared/_LayoutTeacherAdmin.cshtml";
+}
+
+<div class="pagetitle">
+    <h1>訂單管理</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="index.html">老師後台</a></li>
+            <li class="breadcrumb-item">訂單管理</li>
+            <li class="breadcrumb-item active">訂單清單</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">訂單清單</h5>
+                <div>
+                    <!--篩選資料區-->
+                    <div class="d-flex align-items-center gap-4 mb-3">
+                        <div class="d-flex align-items-center gap-2 ">
+                            <label for="inputDate" class="">訂單日期</label>
+                            <div class="">
+                                <input type="date" class="form-control">
+                            </div>
+                            <span>~</span>
+                            <div class="">
+                                <input type="date" class="form-control">
+                            </div>
+                        </div>                        
+                        <div class="" style="width:10%">
+                            <select id="ordervalid" class="form-select" >
+                                <option value="" hidden>課程成立與否</option>
+                                <option value="0">顯示全部</option>
+                                <option value="1">是</option>
+                                <option value="2">否</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-secondary"> 清除條件</button>
+                        <button class="btn btn-success"> 匯出CSV</button>
+                    </div>
+
+                    <div>
+                        <!-- 表格-->
+                        <table id="OrderListTable" class="datatable row-border stripe hover">
+                            <thead>
+                                <tr>
+                                    <th>@Html.DisplayNameFor(m => m.FOrderNumber)</th>
+                                    <th>@Html.DisplayNameFor(m => m.FRealName)</th>
+                                    <th>@Html.DisplayNameFor(m => m.FPhone)</th>
+                                    <th>@Html.DisplayNameFor(m => m.FEmail)</th>
+                                    <th>@Html.DisplayNameFor(m => m.FOrderDate)</th>
+                                    <th>@Html.DisplayNameFor(m => m.FName)</th>
+                                    <th>@Html.DisplayNameFor(m => m.FLessonPrice)</th>
+                                    <th>@Html.DisplayNameFor(m => m.FOrderValid)</th>
+                                    <th>@Html.DisplayNameFor(m => m.FModificationDescription)</th>
+                                </tr>
+                            </thead>
+                        </table>
+                        <!--結束表格 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="~/js/applescript/orderlist.js"asp-append-version="true"></script>
+    <script>
+        //訂單狀態搜尋        
+        $("#ordervalid").change(() => { ordervalidstatus() });
+        function ordervalidstatus() {
+            if ($("#ordervalid").val() == '0') {
+                $('#OrderListTable').DataTable().column(7).search("").draw();
+            } else {
+                $('#OrderListTable').DataTable().column(7).search($("#ordervalid").find(":selected").text()).draw();
+            }
+        }
+    </script>
+}

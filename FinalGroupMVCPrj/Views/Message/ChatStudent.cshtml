@@ -1,0 +1,428 @@
+﻿@model IEnumerable<ChatTeacherViewModel>
+@{
+    ViewData["Title"] = "ChatStudent";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div id="memberId" memberId="@ViewBag.memberId"></div>
+<div class="ChatContainer">
+    <div class="leftSide">
+        <div>
+            <!--search-->
+            <div class="search_chat">
+                <div>
+                    <input id="searchInputTeacher" type="text" placeholder="搜尋" />
+                    <ion-icon name="search-outline"></ion-icon>
+                </div>
+            </div>
+            <div class="chatlist-container" style="overflow-y: auto; max-height: 75vh;height:auto;">
+                <!--chat list-->
+                @foreach (var item in Model)
+                {
+                    <div class="chatlist" onclick="displaySelectTeacherBox(@item.FTeacherId, @ViewBag.memberId)">
+                        <div class="block unread" data-chatbox-id="@item.FTeacherId">
+                            <div class="imgbx">
+                                <img src="@Url.Action("GetTeacherPicture", "Message", new { FTeacherId = item.FTeacherId })" class="cover" style="object-fit: cover;" />
+                            </div>
+                            <div class="details">
+                                <div class="listHead">
+                                    <h4 id="Chatmname">@item.FTeacherName</h4>
+                                    <p class="time"></p>
+                                </div>
+                                <div class="message_p">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="rightSide">
+        <div class="header-chat">
+            <div class="imgText">
+                <div class="userimg">
+                    <img class="cover" id="userImg" />
+                </div>
+                <h4 id="headerContent">
+                </h4>
+            </div>
+        </div>
+
+        <!--chatbox-->
+
+        <div class="chatBox" id="chatBox" style="height:560px;overflow:auto;">
+        </div>
+
+        <!--chat input-->
+        <div class="chatbox_input">
+            <input type="text" id="messageInput" placeholder="輸入訊息" onkeypress="handleKeyPress(event)">
+            <a href="#" id="sendButton" class="avtar avtar-s btn-link-primary" onclick="sendMessage()">
+                <ion-icon name="send-outline"></ion-icon>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex flex-row  justify-content-start gap-2  pt-5" style="height:15%">
+    <div class="d-flex flex-row demoDirect  gap-3 ">
+        <h6>Demo訊息</h6>
+        <button onclick="demoMsg(1)" class="btn  btn-sm rounded-pill">demo1</button>
+        <button onclick="demoMsg(2)" class="btn  btn-sm rounded-pill">demo2-1</button>
+        <button onclick="demoMsg(3)" class="btn  btn-sm rounded-pill">demo2-2</button>
+    </div>
+</div>
+
+<script type="module"
+        src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule
+        src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+
+@section Style {
+    <link rel="stylesheet" href="~/css/BenAdd/ChStyleStudent.css" />
+}
+
+<script src="~/js/BenScript/signalr.js">  </script>
+
+<script>
+    let connection;
+    let selectTeacherId;
+    document.addEventListener("DOMContentLoaded", async () => {
+
+        window.addEventListener('resize', function () {
+            let windowHeight = window.innerHeight;
+            let chatBox = document.getElementById('chatBox');
+            chatBox.style.height = (windowHeight - 220) + 'px';
+        });
+
+        window.dispatchEvent(new Event('resize'));
+
+        connection = new signalR.HubConnectionBuilder().withUrl("/teacherMsgHub").build();
+
+        const memberId = document.getElementById("memberId").getAttribute("memberId");
+
+
+        //與Server建立連線
+        connection.start().then(function () {
+            connection.invoke("SendStudentId", memberId)
+                .then(function () {
+                    console.log("Member ID sent to server");
+                }).catch(function (error) {
+                    console.error("Error sending teacher ID: ", error);
+                });
+            // console.log("Hub 連線完成");
+        }).catch(function (err) {
+            alert('連線錯誤: ' + err.toString());
+        });
+
+        connection.on("ConnectionEstablished", function (message) {
+            console.log(message);
+            //建立連線後向後端請求聊天訊息
+            // connection.invoke("GetChatMessages", teacherId)
+            //     .then(function (messages) {
+            //         console.log("Received chat messages:", messages);
+            //         //獲得後將其展示
+            //         displayChatMessages(messages);
+            //     }).catch(function (error) {
+            //         console.error("Error retrieving chat messages: ", error);
+            //     });
+            updateChatListInfo(memberId);
+        });
+
+        connection.on("UpdContent", function (msg, teacherId, memberId) {
+            if (selectTeacherId == teacherId) {
+                connection.invoke("GetMessagesByStudent", teacherId, memberId)
+                    .then(function (messages) {
+                        //獲得後將其展示
+                        displayChatMessages(messages);
+
+                    }).catch(function (error) {
+                        console.error("Error retrieving chat messages: ", error);
+                    });
+            }
+
+            updateChatListInfo(memberId);
+            return;
+        });
+
+        //讀取更新
+        connection.on("UpdContentByRead", function (msg, teacherId, memberId) {
+            if (selectTeacherId == teacherId) {
+                connection.invoke("GetMessagesByStudentByRead", teacherId, memberId)
+                    .then(function (messages) {
+                        // console.log("Received chat messages:", messages);
+                        
+                        displayChatMessages(messages);
+
+                    }).catch(function (error) {
+                        console.error("Error retrieving chat messages: ", error);
+                    });
+            }
+        });
+
+        //有人連線時要做的動作
+        connection.on("UpdList", function (msg) {
+            displaySelectTeacherBox(selectTeacherId, memberId);
+        });
+
+        //搜尋功能
+        document.querySelector("#searchInputTeacher").addEventListener("input", function () {
+            let searchValue = this.value.toLowerCase();
+            let chatList = document.querySelectorAll(".chatlist");
+
+            chatList.forEach(function (chatItem) {
+                let chatName = chatItem.querySelector("#Chatmname").innerText.toLowerCase();
+                if (chatName.includes(searchValue)) {
+                    chatItem.style.display = "block";
+                } else {
+                    chatItem.style.display = "none";
+                }
+            });
+        });
+
+    });
+
+    function handleKeyPress(event) {
+        if (event.keyCode === 13) {
+            sendMessage();
+            event.preventDefault();
+        }
+    }
+
+    function updateChatListInfo(memberId) {
+        connection.invoke("GetChatRoomInfo", memberId, false)
+            .then(function (chatRoomInfo) {
+
+                let chatRoomContainer = document.querySelector(".chatlist-container");
+
+                chatRoomInfo.forEach(function (roomInfo) {
+
+                    const chatRoomElement = document.querySelector(`[data-chatbox-id="${roomInfo.userId}"]`);
+                    if (chatRoomElement) {
+
+                        const messageContainer = chatRoomElement.querySelector('.message_p');
+                        if (messageContainer) {
+
+                            let unreadCountHTML = '';
+                            if (roomInfo.unreadMessagesCount > 0) {
+                                unreadCountHTML = `<b class="unread-count">${roomInfo.unreadMessagesCount}</b>`;
+                                const chatbox = document.querySelector(`[data-chatbox-id="${roomInfo.userId}"]`).closest('.chatlist');
+                                const chatlistContainer = document.querySelector(".chatlist-container");
+                                chatlistContainer.prepend(chatbox);
+                            }
+                            messageContainer.innerHTML = `
+                                <span class="last-message">${truncateString(roomInfo.lastMessage.fMessage, 15)}</span>
+                                ${unreadCountHTML}
+                        `;
+                        }
+                    }
+                });
+            });
+    }
+
+    function truncateString(str, maxLength) {
+        if (str.length > maxLength) {
+            return str.substring(0, maxLength) + '...';
+        }
+        return str;
+    }
+
+    function displaySelectTeacherBox(teacherId, memberId) {
+        const newMsg = document.querySelector(`[data-chatbox-id="${memberId}"] .message_p .unread-count`)
+        if (newMsg) {
+            newMsg.remove();
+        }
+        teacherWindowActive(teacherId);
+        updateSelectTeacherHeader(teacherId);
+        connection.invoke("GetMessagesByStudent", teacherId.toString(), memberId.toString())
+            .then(function (messages) {
+                // console.log("Received chat messages:", messages);
+
+                displayChatMessages(messages);
+            }).catch(function (error) {
+                console.error("Error retrieving chat messages: ", error);
+            });
+
+        connection.invoke("UpdateTeacherMessages", teacherId.toString(), memberId.toString())
+            .then(function () {
+                // console.log("Received chat messages:", messages);
+            }).catch(function (error) {
+                console.error("Error retrieving chat messages: ", error);
+            });
+    }
+
+    function teacherWindowActive(teacherId) {
+        const activeWindow = document.querySelector(`[data-chatbox-id="${teacherId}"]`);
+        const unreadWindow = document.querySelector(`[data-chatbox-id="${selectTeacherId}"]`);
+
+        if (activeWindow) {
+            activeWindow.classList.remove('unread');
+            activeWindow.classList.add('active');
+            if (unreadWindow) {
+                unreadWindow.classList.remove('active');
+                unreadWindow.classList.add('unread');
+            }
+        }
+    }
+
+    async function updateSelectTeacherHeader(teacherId) {
+        selectTeacherId = teacherId;
+
+        try {
+            const response = await fetch(`/message/GetTeacherInfo?fTeacherId=${teacherId}`);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
+
+            const teacherName = data.fTeacherName;
+            const ImgSrc = `@Url.Action("GetTeacherPicture", "Message", new { fTeacherId = "__teacherId__" })`.replace("__teacherId__", teacherId);
+
+            const headerContent = document.querySelector('#headerContent');
+            headerContent.innerHTML = '';
+            headerContent.innerHTML += teacherName + '<br>';
+
+            const headerImg = document.querySelector('#userImg');
+            headerImg.src = ImgSrc;
+
+        } catch (error) {
+            console.error('There was a problem with your fetch operation:', error);
+        }
+
+
+        connection.invoke("TeacherIsOnline", teacherId.toString())
+            .then(function (isOnline) {
+                const online = document.querySelector('#headerContent');
+                online.innerHTML += isOnline == true ? '<span class=" bg-success border border-light rounded-circle chat-badge"></span>' : '<span class=" bg-danger border border-light rounded-circle chat-badge"></span>';
+                online.innerHTML += ' ';
+                online.innerHTML += isOnline == true ? '<span>上線</span>' : '<span>離線</span>';
+            }).catch(function (error) {
+                console.error("Error retrieving chat messages: ", error);
+            });
+    }
+
+    //送出訊息
+    function sendMessage() {
+        const messageInput = document.getElementById("messageInput");
+        const message = messageInput.value.trim();
+        if (message === "") {
+            return;
+        }
+        const date = new Date();
+        const time = getCurrentTime(date);
+
+        const memberId = @ViewBag.memberId;
+        const teacherId = selectTeacherId
+
+        connection.invoke("SaveMessage", teacherId.toString(), memberId.toString(), message, date, false)
+            .catch(function (err) {
+                alert('錯誤: ' + err.toString());
+            });
+        messageInput.value = "";
+
+    }
+
+    //展示聊天內容
+    function displayChatMessages(messages) {
+        const chatBox = document.getElementById("chatBox");
+        chatBox.innerHTML = "";
+        messages.forEach(function (message) {
+            const time = getDisplayTime(new Date(message.fMessageTime));
+            let messageDiv = document.createElement("div");
+            const ImgSrc = "@Url.Action("GetStudentPicture", "Message", new { fMemberId = ViewBag.memberId })"
+            const ImgSrcInput = `@Url.Action("GetTeacherPicture", "Message", new { FTeacherId = "__teacherId__" })`.replace("__teacherId__", selectTeacherId);
+            if (message.fIsRead) {
+                iconHtml = '<p style="font-size:15px;">已讀<p>';
+            }
+            else {
+                iconHtml = '';
+            }
+            
+            if (!message.fIsTeacherMsg) {
+                messageDiv.className = "message my_message";
+                messageDiv.innerHTML = `
+                                                                                <div class="d-flex">
+                                                                                    <div class="flex-shrink-0">
+                                                                                        <ul class="list-inline ms-auto mb-0">
+                                                                                                <li class="list-inline-item" style="margin-top:20px;">
+                                                                                                        ${iconHtml}
+                                                                                            </li>
+                                                                                        </ul>
+                                                                                    </div>
+                                                                                    <div class="flex-grow-1 mx-3">
+                                                                                        <div class="msg-content">
+                                                                                                <p class="mb-0" id="msgtxt">${message.fMessage}</p>
+                                                                                        </div>
+                                                                                            <p class="mb-0 text-muted text-sm msg_time" id="time">${time}</p>
+                                                                                    </div>
+                                                                                    <div class="flex-shrink-0">
+                                                                                        <div class="chat-avtar">
+                                                                                            <img class="rounded-circle img-fluid wid-40" style="max-width: 40px; max-height: 40px;" src=${ImgSrc} alt="User image">
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            `;
+                chatBox.appendChild(messageDiv);
+            } else {
+                messageDiv.className = "message std_message";
+                messageDiv.innerHTML = `
+                                                                        <div class="d-flex">
+                                                                            <div class="flex-shrink-0">
+                                                                                <div class="chat-avtar">
+                                                                                        <img class="rounded-circle img-fluid wid-40 " style="max-width: 40px; max-height: 40px;" src=${ImgSrcInput} alt="User image">
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="flex-grow-1 mx-3">
+                                                                                <div class="msg-content">
+                                                                                        <p class="mb-0" id="msgtxt">${message.fMessage}</p>
+                                                                                </div>
+                                                                                    <p class="mb-0 text-muted text-sm msg_time" id="time">${time}</p>
+                                                                            </div>
+                                                                        </div>
+                                                                                `;
+                chatBox.appendChild(messageDiv);
+            }
+
+        });
+    }
+
+    function getCurrentTime(now) {
+        let hours = now.getHours();
+        let minutes = now.getMinutes();
+        let ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        let strTime = hours + ':' + minutes + ' ' + ampm;
+        return strTime;
+    }
+
+    function getDisplayTime(date) {
+        let hours = date.getHours();
+        let minutes = date.getMinutes();
+        let ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        let strTime = hours + ':' + minutes + ' ' + ampm;
+        return strTime;
+    }
+
+    function demoMsg(demoNumber) {
+        let message = "";
+        switch (demoNumber) {
+            case 1:
+                message = "嗨，大成老師！我是參加你的 ETF 課程的小君。我在課程中學到了很多有關 ETF 的知識，但對其中一個概念仍感到困惑。";
+                break;
+            case 2:
+                message = "在課程中你提到了 ETF 的構建方法，我不太明白這個概念。想請老師解釋一下，謝謝。";
+                break;
+            case 3:
+                message = "原來如此，謝謝你的解釋，大成老師！這幫助我更好地理解了 ETF 的構建方法。";
+                break;
+            default:
+                message = "沒有選擇有效的 Demo 訊息。";
+                break;
+        }
+        document.getElementById("messageInput").value = message;
+    }
+</script>

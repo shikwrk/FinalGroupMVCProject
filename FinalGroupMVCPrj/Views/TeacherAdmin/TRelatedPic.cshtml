@@ -1,0 +1,262 @@
+﻿@model IEnumerable<TeacherBasicViewModel>
+@{
+    ViewData["Title"] = "TRelatedPic";
+    Layout = "~/Views/Shared/_LayoutTeacherAdmin.cshtml";
+}
+@section Styles {
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        /*	general	*/
+
+        section {
+            padding: 50px 0;
+        }
+
+        /*	gallery */
+
+        .gallery-title {
+            font-size: 36px;
+            color: #3F6184;
+            text-align: center;
+            font-weight: 500;
+            margin-bottom: 70px;
+        }
+
+        .btn btn-outline-secondary {
+            font-size: 18px;
+            border: 2px solid #3F6184;
+            padding: 5px 10px;
+            text-align: center;
+            color: #3F6184;
+            margin-bottom: 30px;
+            background: transparent;
+        }
+
+        .btn.btn-outline-secondary:hover,
+        .btn.btn-outline-secondary:focus,
+        .btn.btn-outline-secondary.active {
+            color: #ffffff;
+            background-color: #3F6184;
+            outline: none;
+        }
+
+        .gallery_product {
+            margin-inline: 20px;
+            margin-bottom: 15px;
+            padding: 0;
+            position: relative;
+        }
+
+            .gallery_product .img-info {
+                position: absolute;
+                background: rgba(0,0,0,0.3);
+                left: 0;
+                right: -5%;
+                bottom: 0;
+                padding: 20px;
+                overflow: hidden;
+                color: #fff;
+                top: 0;
+                display: none;
+                -webkit-transition: 2s;
+                transition: 2s;
+                text-align: center;
+            }
+
+            .gallery_product:hover .img-info {
+                display: block;
+                -webkit-transition: 2s;
+                transition: 2s;
+            }
+
+        /*	end gallery */
+    </style>
+}
+
+
+<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+<!------ Include the above in your HEAD tag ---------->
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" />
+<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+<!-- html畫面start -->
+<div class="pagetitle" style="margin-left:25px;">
+    <h1>相關圖片</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="index.html">老師後台</a></li>
+            <li class="breadcrumb-item">老師資料</li>
+            <li class="breadcrumb-item active">相關圖片</li>
+        </ol>
+    </nav>
+</div><!-- End Page Title -->
+<div class="container-fluid">
+    <div class="row">
+        <!-- 新增圖片的按鈕 -->
+        <div class="text-start" style="margin:10px">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">新增圖片</button>
+        </div>
+        <!-- 分類圖片 -->
+        <div align="justify" style="margin:10px">
+            <button class="btn btn-outline-secondary" data-filter="all">所有</button>
+            <button class="btn btn-outline-secondary" data-filter="教育背景">教育背景</button>
+            <button class="btn btn-outline-secondary" data-filter="證照證書">證照證書</button>
+            <button class="btn btn-outline-secondary" data-filter="作品">作品</button>
+        </div>
+
+        <br />
+        <div id="divImages" style="display:flex;flex-wrap: wrap;border-color:red">
+
+            <!-- 圖片們 -->
+            @foreach (TeacherBasicViewModel item in Model)
+            {
+                <div>
+
+                    <div style="display: flex; align-items: center;margin-bottom:0" class=" gallery_product col-sm-3 col-xs-6 filter   @item.Category ">
+                        <!-- 刪除功能 -->
+                        <form asp-controller="TeacherAdmin" asp-action="TdeletePic" method="post" >
+                            <input type="hidden" name="id" value="@item.TeacherImagesId" />
+                            <button id="btnSubmit" type="button" class="btn btn-danger btn-sm" style="width:35px;height:30px;" title="刪除" onclick="ClickDelete(this)"><i class="bi bi-trash"></i></button>
+                        </form>
+                        <!-- 編輯功能 -->
+                        @* <button class="btn btn-primary btn-sm" style="width:35px;height:30px" title="編輯" data-bs-toggle="modal" data-bs-target="#staticBackdrop" onclick="editPicture(@item.TeacherImagesId)"><i class="fa-solid fa-pencil"></i></button> *@
+                        <button class="btn btn-primary btn-sm" style="width:35px;height:30px" title="編輯" data-bs-toggle="modal" data-bs-target="#editModal" onclick="editPicture(@item.TeacherImagesId)"><i class="fa-solid fa-pencil"></i></button>
+                    </div>
+                    <div class="gallery_product col-sm-3 col-xs-6 filter   @item.Category " style="width:345px;height:240px">
+                        <img src="@Url.Action("GetPicture","TeacherAdmin",new {id=item.TeacherImagesId })" title="@item.ImageName" style="width:360px;height:240px" />
+                        <div class='img-info'>
+                            <h4>@item.ImageName</h4>
+                        </div>
+                    </div>
+                </div>
+                @*  <!-- 編輯圖片的modal彈跳視窗-->
+            <partial name="T_EditTrPicPartialcopy" model="@item.TeacherImageModel"></partial>   *@
+
+            }
+        </div>
+    </div>
+</div>
+
+<!-- html畫面end -->
+<!-- 新增圖片的modal彈跳視窗-->
+<partial name="T_CreateTrPicPartial" model="new TTeacherImage()"></partial>
+<!-- 編輯圖片的modal彈跳視窗-->
+<partial name="T_EditTrPicPartial" model="new TTeacherImage()"></partial>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js"></script>
+    <script>
+        /*	gallery */
+        $(document).ready(function () {
+
+            $(".btn.btn-outline-secondary").click(function () {
+                var value = $(this).attr('data-filter');
+
+                if (value == "all") {
+                    $('.filter').show('1000');
+                }
+                else {
+                    $(".filter").not('.' + value).hide('3000');
+                    $('.filter').filter('.' + value).show('3000');
+
+                }
+
+                if ($(".btn.btn-outline-secondary").removeClass("active")) {
+                    $(this).removeClass("active");
+                }
+                $(this).addClass("active");
+            });
+        });
+        /*	end gallery */
+
+        $(document).ready(function () {
+            $(".fancybox").fancybox({
+                openEffect: "none",
+                closeEffect: "none"
+            });
+        });
+
+    </script>
+    @* script功能 : 預覽上傳的圖片、 *@
+    <script>
+        // //判斷有沒有值不斷要有值第一個檔案要有值
+        // function previewImage(inputFile, img) {
+        //     //判斷檔案控制項有沒有值 且 第一個檔案要有值
+        //     if (inputFile.files != null && inputFile.files[0] != null) {
+        //         //限制檔案上傳格式
+        //         var allowTpye = "image.*";
+        //         // 判斷檔案有沒有符合上傳的格式
+        //         if (inputFile.files[0].type.match(allowTpye)) {
+        //             //上傳檔案並預覽圖片內容
+        //             var reader = new FileReader();
+        //             //檔案讀取完成後處理load事件//函式參數e抓事件發生的內容
+        //             reader.onload = function (e) {
+        //                 //console.log(e.target.result)
+        //                 //替換頁面檔案，prev():前一個//讀到的檔案內容(e.target.result)丟給src
+        //                 //img.attr("src", e.target.result);
+        //                 //改title內容，改成name屬性
+        //                 //img.attr("title", inputFile.files[0].name);
+        //                 img.innerHTML += `<img src="${e.target.result}" style="width:110px;">`;
+        //                 //class選擇器:依據樣式選擇器找到btn
+        //                 $("#inpSubmit").prop('disabled', false);
+        //                 //id選擇器:依據樣式選擇器找到div
+        //                 $("#divwarning").hide();
+        //             };
+        //             //從load事件拿檔案(e.target.result)
+        //             reader.readAsDataURL(inputFile.files[0]);
+        //         }
+        //         else {
+        //             //class選擇器:依據樣式選擇器找到btn
+        //             $("#inpSubmit").prop('disabled', true);
+        //             //id選擇器:依據樣式選擇器找到div
+        //             $("#divwarning").show();
+        //         }
+        //     }
+        // }
+        // $("#Inputfile").change(function () {
+        //     // alert("change");
+        //     previewImage(this, $("#previews"));
+        // });
+       
+
+    </script>
+    @* script功能 : 編輯的partialview欄位顯示 *@
+    <script>
+        async function editPicture(teacherImagesId) {
+            const response = await fetch(`@Url.Content("~/TeacherAdmin/EditPartialViewInfo")?teacherImagesId=${teacherImagesId}`)
+            const datas = await response.json();
+            //console.log(datas)
+            document.querySelector('#editfloatingInput').value = datas.imageName;
+            document.querySelector('#editselect').value = datas.category;
+            document.querySelector('#inputeditimageid').value = datas.imageId;
+        }
+    </script>
+    <script>
+        function ClickDelete(t) {
+            const form = t.parentNode;
+            Swal.fire({
+                title: "確認儲存帳號資訊?",
+                text: ``,
+                icon: "info",
+                showCancelButton: true,
+                confirmButtonColor: "#30C2EC",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "確定",
+                cancelButtonText: "取消"
+            })
+                .then(function (result) {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                })
+        }
+    </script>
+}

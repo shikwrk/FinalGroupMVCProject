@@ -1,0 +1,192 @@
+﻿@model LearningRecordVM
+<section class="course-area latest ptb-100">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="section-title title-inline mb-30" data-aos="fade-up">
+                    <h2 class="title mb-20">                        
+                        <span></span>
+                        <img class="title-shape lazyload" src="/images/placeholder.png" data-src="/images/shape/title-shape.png" alt="Shape">
+                    </h2>                 
+                </div>
+            </div>
+            <div class="tabs-navigation mb-20">
+                <ul class="nav nav-tabs" data-hover="fancyHover">
+                    <li class="nav-item active">
+                        <button class="nav-link hover-effect btn-md rounded-pill active" data-bs-toggle="tab" data-bs-target="#tab1" type="button">未開始</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link hover-effect btn-md rounded-pill" data-bs-toggle="tab" data-bs-target="#tab2" type="button">已完成</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link hover-effect btn-md rounded-pill" data-bs-toggle="tab" data-bs-target="#tab3" type="button">已取消</button>
+                    </li>               
+                </ul>
+            </div>
+            <div class="col-12">
+                <div class="tab-content" data-aos="fade-up">
+                    <!--課程未開始-->                   
+                    <div class="tab-pane slide show active" id="tab1">
+                        <div class="row">
+                            @foreach (var course in Model.SuccessRecord)
+                        {
+                            if (course.Value.FLessonDate.HasValue && DateTime.Now.CompareTo(course.Value.FLessonDate.Value) < 0)
+                            {
+                                
+                                    <div class="col-xl-3 col-lg-4 col-sm-6">
+                                        <div class="course-default border radius-md mb-30">
+                                            <figure class="course-img">
+                                                <a asp-controller="LessonHistory" asp-action="Detail" asp-route-id="@course.Key" title="Image" target="_self" class="lazy-container ratio ratio-2-3">
+                                                    @if (course.Value.FPhoto != null)
+                                                    {
+                                                        <img class="lazyload" src="data:image;base64,@(Convert.ToBase64String(course.Value.FPhoto))" alt="Image" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <img class="lazyload" src="/images/placeholder.png" data-src="/images/course/pro-1.jpg" alt="course">
+                                                    }
+                                                </a>
+                                                <div class="hover-show">
+                                                    <a asp-controller="LessonHistory" asp-action="Detail" asp-route-id="@course.Key" class="btn btn-md btn-primary rounded-pill" title="Enroll Now" target="_self">查詢課程細節</a>
+                                                </div>
+                                            </figure>
+                                            <div class="course-details">
+                                                <div class="p-3">                                                  
+                                                    <h6 class="course-title lc-2 mb-0">
+                                                        <a asp-controller="LessonHistory" asp-action="Detail" asp-route-id="@course.Key" target="_self" title="Link">
+                                                            @course.Value.FName
+                                                        </a>
+                                                    </h6>                                                    
+                                                </div>
+                                                <div class="course-bottom-info px-3 py-2">
+                                                    @{
+                                                        if (course.Value.FLessonDate != null)
+                                                        {
+                                                            var lessonDateStr = course.Value.FLessonDate.Value.ToString("yyyy/MM/dd");
+                                                            <span class="font-sm icon-start"><i class="fa-solid fa-calendar-days color-primary"></i>@lessonDateStr</span>
+                                                        }
+                                                    }
+                                                </div>
+                                               
+                                            </div>
+                                        </div>
+                                    </div>
+                                
+                            }
+                        }  
+                        </div>
+                    </div>
+                    <!--課程已完成-->
+                    <div class="tab-pane slide" id="tab2">
+                        <div class="row">
+                        @foreach (var course in Model.SuccessRecord)
+                        {
+                            if (course.Value.FLessonDate.HasValue && DateTime.Now.CompareTo(course.Value.FLessonDate.Value) >= 0)
+                            {
+                                
+                                    <div class="col-xl-3 col-lg-4 col-sm-6">
+                                        <div class="course-default border radius-md mb-30">
+                                            <figure class="course-img">
+                                                <a asp-controller="LessonHistory" asp-action="Detail" asp-route-id="@course.Key" title="Image" target="_self" class="lazy-container ratio ratio-2-3">
+                                                    @if (course.Value.FPhoto != null)
+                                                    {
+                                                        <img class="lazyload" src="data:image;base64,@(Convert.ToBase64String(course.Value.FPhoto))" alt="Image" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <img class="lazyload" src="/images/placeholder.png" data-src="/images/course/pro-1.jpg" alt="course">
+                                                    }
+                                                </a>
+                                                <div class="hover-show">
+                                                    <a asp-controller="LessonHistory" asp-action="Detail" asp-route-id="@course.Key" class="btn btn-md btn-primary rounded-pill" title="Enroll Now" target="_self">查詢課程細節</a>
+                                                </div>
+                                            </figure>
+                                            <div class="course-details">
+                                                <div class="p-3">
+                                                    <h6 class="course-title lc-2 mb-0">
+                                                        <a asp-controller="LessonHistory" asp-action="Detail" asp-route-id="@course.Key" target="_self" title="Link">
+                                                            @course.Value.FName
+                                                        </a>
+                                                    </h6>
+                                                  
+                                                </div>
+                                                <div class="course-bottom-info px-3 py-2">
+                                                    @{
+                                                        if (course.Value.FLessonDate != null)
+                                                        {
+                                                            var lessonDateStr = course.Value.FLessonDate.Value.ToString("yyyy/MM/dd");
+                                                            <span class="font-sm icon-start"><i class="fa-solid fa-calendar-days color-primary"></i>@lessonDateStr</span>
+                                                        }
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                
+                            }
+                        }
+                        </div>
+                    </div>
+                    <!--課程已取消-->
+                    <div class="tab-pane slide" id="tab3">
+                        <div class="row">
+                        @foreach (var course in Model.CancelRecord)
+                        {
+                           
+                                
+                                    <div class="col-xl-3 col-lg-4 col-sm-6">
+                                        <div class="course-default border radius-md mb-30">
+                                            <figure class="course-img">
+                                                <a asp-controller="LessonHistory" asp-action="Detail" asp-route-id="@course.Key" title="Image" target="_self" class="lazy-container ratio ratio-2-3">
+                                                    @if (course.Value.FPhoto != null)
+                                                    {
+                                                        <img class="lazyload" src="data:image;base64,@(Convert.ToBase64String(course.Value.FPhoto))" alt="Image" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <img class="lazyload" src="/images/placeholder.png" data-src="/images/course/pro-1.jpg" alt="course">
+                                                    }
+                                                </a>
+                                                <div class="hover-show">
+                                                    <a asp-controller="LessonHistory" asp-action="Detail" asp-route-id="@course.Key" class="btn btn-md btn-primary rounded-pill" title="Enroll Now" target="_self">查詢課程細節</a>
+                                                </div>
+                                            </figure>
+                                            <div class="course-details">
+                                                <div class="p-3">
+                                                    <h6 class="course-title lc-2 mb-0">
+                                                        <a asp-controller="LessonHistory" asp-action="Detail" asp-route-id="@course.Key" target="_self" title="Link">
+                                                            @course.Value.FName
+                                                        </a>
+                                                    </h6>
+                                             
+                                                </div>
+                                            <div class="course-bottom-info px-3 py-2">
+                                                @{
+                                                    if (course.Value.FLessonDate != null)
+                                                    {
+                                                        var lessonDateStr = course.Value.FLessonDate.Value.ToString("yyyy/MM/dd");
+                                                        <span class="font-sm icon-start"><i class="fa-solid fa-calendar-days color-primary"></i>@lessonDateStr</span>
+                                                    }
+                                                }
+                                            </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                
+                            
+                        }
+                        </div>
+                    </div>
+                   
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Shapes -->
+    <div class="shape">
+        <img class="shape-1 lazyload" src="/images/placeholder.png" data-src="/images/shape/shape-4.png" alt="Shape">
+        <img class="shape-2 lazyload" src="/images/placeholder.png" data-src="/images/shape/shape-6.png" alt="Shape">
+        <img class="shape-3 lazyload" src="/images/placeholder.png" data-src="/images/shape/shape-2.png" alt="Shape">
+        <img class="shape-4 lazyload" src="/images/placeholder.png" data-src="/images/shape/shape-1.png" alt="Shape">
+    </div>
+</section>

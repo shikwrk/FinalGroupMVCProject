@@ -1,0 +1,707 @@
+﻿@model MemberBasicViewModel
+@{
+    ViewData["Title"] = "List";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+@section Styles{
+    <style>
+        .fa-solid.fa-check:hover {
+            color: limegreen;
+        }
+
+        .fa-solid.fa-x:hover {
+            color: red;
+        }
+    </style>
+}
+
+<div class="pagetitle">
+    <h1>會員管理</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="index.html">管理員後台</a></li>
+            <li class="breadcrumb-item">會員管理</li>
+            <li class="breadcrumb-item active">會員清單</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">會員清單</h5>
+                <div >
+                    <!--篩選資料區-->
+                    <div class="d-flex align-items-center gap-4 mb-3">
+                        <div class="d-flex align-items-center gap-2 ">
+                            <label for="inputDate" class="">註冊日期</label>
+                            <div class="">
+                                <input type="date" class="form-control">
+                            </div>
+                            <span>~</span>
+                            <div class="">
+                                <input type="date" class="form-control">
+                            </div>
+                        </div>
+                            <div class="" style="width:10%">
+                                <select class="form-select" aria-label="Default select example">
+                                <option selected>驗證不拘</option>
+                                    <option value="1">One</option>
+                                    <option value="2">Two</option>
+                                    <option value="3">Three</option>
+                                </select>
+                        </div>
+                        <div class="" style="width:15%">
+                            <select class="form-select" aria-label="Default select example">
+                                <option selected>優惠通知不拘</option>
+                                <option value="1">One</option>
+                                <option value="2">Two</option>
+                                <option value="3">Three</option>
+                            </select>
+                        </div>
+                        <div class="" style="width:10%">
+                            <select class="form-select" aria-label="Default select example">
+                                <option selected>狀態不拘</option>
+                                <option value="1">One</option>
+                                <option value="2">Two</option>
+                                <option value="3">Three</option>
+                            </select>
+                        </div>
+                            <button class="btn btn-secondary"> 清除條件</button>
+                        <a href="@Url.Action("DownloadCsv","AdminMember")" class="btn btn-success"> 匯出CSV</a>
+                    </div>
+
+                    <div>
+                        <!-- 表格-->
+                        <table id="memberListTable" class="datatable row-border stripe hover">
+                            <thead>
+                                <tr>
+                                    <th>@Html.DisplayNameFor(m=>m.MemberId)</th>
+                                    <th>@Html.DisplayNameFor(m=>m.RegisterDateTime)</th>
+                                    <th>@Html.DisplayNameFor(m=>m.RealName)</th>
+                                     <th>@Html.DisplayNameFor(m=>m.ShowName)</th>
+                                    <th>@Html.DisplayNameFor(m=>m.Email)</th>
+                                     <th>@Html.DisplayNameFor(m=>m.EmailVerification)</th>
+                                    <th>@Html.DisplayNameFor(m=>m.GetCampInfo)</th>
+                                    <th>@Html.DisplayNameFor(m=>m.Status)</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                        </table>
+                        <!--結束表格 -->
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- 彈跳視窗 -->
+<div class="modal fade " id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content p-3 ">
+                        <div class="d-flex justify-content-between">
+                <!-- 最上排會員資訊&關閉 -->
+              <div class="d-flex gap-2 px-2 mb-3 mt-2">
+                    <span class="fw-bold">會員編號：</span><span id="curMemId">1</span> <span id="currealName">陳小美</span><span id="curMemEmail">example@gmail.com</span>
+              </div>
+                <button type="button" class="btn" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-x"></i></button>
+            </div>
+            <div class="d-flex">
+                <!-- 標籤選取區 -->
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="basic-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">基本資訊</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="other-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">其他資訊</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="lgHistory-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false">登入紀錄</button>
+                    </li>
+                </ul> 
+            </div>
+
+            <!--標籤內容區-->
+            <div class="tab-content pt-2" id="myTabContent">
+                <!--基本資訊標籤內容區-->
+                <div class="tab-pane fade show active p-3" id="home" role="tabpanel" aria-labelledby="basic-tab">
+                    <div class="d-flex  gap-4">
+                        <!--第一區-->
+                        <div class=" form-block mb-30 d-flex align-items-center flex-column gap-4 " data-aos="fade-up" style="width:50%;height:50%">
+                            <div class="course d-flex flex-column align-items-center ">
+                                <div class="position-relative">
+                                    <img id="memPhoto" class="lazyload rounded-pill border border-2" src="/images/owenadd/membernophoto.jpg" alt="course" style="width:200px;height:200px">
+                                    <button id="deleteBtn" onclick="removeMemPhoto()" title="移除違規頭像" class="btn border border-2 position-absolute translate-middle d-flex justify-content-center align-items-center" style="top: 85%; left: 85%; width: 50px; height: 50px; border-radius: 50%; background-color: white; color: lightgray">
+                                        <i id="deleteBtnIcn" class="fa-solid fa-trash-can fa-xl" style="color:red"></i>
+                                    </button>
+                                </div>
+                            </div>
+                                <div class="d-flex flex-column">
+                                        <div class="d-flex gap-2 align-items-center mb-2 ">
+                                        <span class="fw-bold">註冊日期：</span>
+                                            <span id="memRegDate" >2024-03-04 10:08</span>
+                                        </div>
+                                            <div class="d-flex gap-2 mb-2">
+                                        <span class="fw-bold">電子信箱：</span>
+                                                <span id="memEmail" >example@gmail.com</span>
+                                                <span id="memEmailVertify" class="text-success" >已驗證</span>
+                                        </div>
+                                        <div class="mb-2">
+                                        <label  class="fw-bold">連結帳號：  </label>
+                                    <span id ="memConnectAccount">Google、Line</span>
+                                        </div>
+                                <div class="d-flex gap-2 align-items-center mb-2">
+                                    <span class="fw-bold">帳號狀態：</span>
+                                    <span id="memStatus" class="text-success">正常</span>
+                                    <button id="statusBtn" onclick="changeStatus()" class="btn btn-danger btn-sm">停權</button>
+                                </div>
+                                </div>
+
+                        </div>
+                        <!--第二區-->
+                        <div class="flex-grow-1 d-flex flex-column" style="width:40%;height:50%">
+                            <div class="mb-4"><span>※編輯&nbsp; <i class="fa-solid fa-pen-to-square"></i>&nbsp;僅限用於違規資料或必要</span></div>
+                            <div class="d-flex gap-3 justify-content-between align-items-center">
+                                <div class=" form-group mb-3">
+                                    <label for="realName">真實姓名 </label>
+                                    <input disabled id="realName" type="text" class="form-control"  value="王小明" style="width:135%">
+                                </div>       
+                                <div class="editValue " style="cursor:pointer"><i editProp="realName" class="fa-solid fa-pen-to-square"></i></div>
+                            </div>
+                            <div class="d-flex gap-3 justify-content-between align-items-center">
+                                <div class=" form-group mb-3">
+                                    <label for="showName">顯示名稱 </label>
+                                    <input disabled id="showName" type="text" class="form-control" placeholder="" style="width:135%">
+                                </div>
+                                <div class="editValue " style="cursor:pointer"><i editProp="showName" class="fa-solid fa-pen-to-square"></i></div>
+                            </div>
+                            <div class="d-flex gap-3 justify-content-between align-items-center">
+                                <div class=" form-group mb-3">
+                                    <label for="phone">電話</label>
+                                    <input id="phone" disabled type="text" class="form-control" style="width:135%">
+                                </div>
+                                <div class="editValue d-flex align-items-center" style="cursor:pointer"><i editProp="phone" class="fa-solid fa-pen-to-square"></i></div>
+                            </div>
+                            <div class="d-flex gap-3 justify-content-between align-items-center">
+                                <div class=" form-group mb-3">
+                                    <label for="birth">生日  </label>
+                                    <input id="birth" disabled type="date" class="form-control" placeholder="" required="" style="width:190%">
+                                </div>
+                                <div class="editValue " style="cursor:pointer"><i editProp="birth" class="fa-solid fa-pen-to-square"></i></div>
+                            </div>
+
+                            <div class="d-flex gap-3 justify-content-between align-items-center">
+                                <div class=" form-group mb-3 ">
+                                    <label for="memGender">性別： </label>
+                                    <label id ="memGender">其他</label>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-3 justify-content-between align-items-center">
+                                <div class=" form-group mb-3">
+                                    <label >備註：  </label>
+                                    <textarea disabled class="form-control" style="width:135%"></textarea>
+                                </div>
+                                <div class="editValue d-flex flex-column " style="cursor:pointer"><i class="fa-solid fa-pen-to-square"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--其他資訊標籤內容區-->
+                <div class="tab-pane fade p-3 mt-2 mb-4" id="profile" role="tabpanel" aria-labelledby="other-tab">
+                    <div class="d-flex flex-column ">
+                        <div class="d-flex gap-3 align-items-end">
+                            <div class="flex-grow-1 form-group mb-3">
+                                <label  class="fw-bold">接收優惠活動通知： </label>
+                                <label id ="memGetCampInfo">否</label>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3">
+                            <div class="flex-grow-1 d-flex flex-column gap-4 ">
+                                <div class="flex-grow-1 form-group">
+                                    <label class="fw-bold">職業類別：</label>
+                                    <label id="memJob"> 餐飲／旅遊 ／美容美髮</label>
+                                </div>
+                                <div class="flex-grow-1 form-group">
+                                    <label class="fw-bold">想學習的領域：</label>
+                                    <label id="memWishField">投資理財、語言學習、休閒運動</label>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 d-flex flex-column gap-4  ">
+                                <div class="flex-grow-1 form-group">
+                                    <label class="fw-bold">最高學歷：</label>
+                                    <label id="memEducation">未填寫</label>
+                                </div>
+                                <div class="flex-grow-1 form-group">
+                                    <label class="fw-bold">生活縣市：</label>
+                                    <label id="memCities">台北市、新竹市、桃園市</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="my-2">
+                            <hr />
+                        </div>
+
+                        <div class="d-flex gap-3">
+                            <div class="flex-grow-1 d-flex flex-column gap-4 ">
+                                <div class="flex-grow-1 form-group">
+                                    <label class="fw-bold">總上課時數：</label>
+                                    <label for="company_name">0 小時</label>
+                                </div>
+                                <div class="flex-grow-1 form-group">
+                                    <label class="fw-bold">總上課堂數：</label>
+                                    <label for="company_name">0 堂</label>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 d-flex flex-column gap-4  ">
+                                <div class="flex-grow-1 form-group">
+                                    <label class="fw-bold">累計訂單金額：</label>
+                                    <label for="company_name">$0</label>
+                                </div>
+                                <div class="flex-grow-1 form-group">
+                                    <label class="fw-bold">累計評論數量：</label>
+                                    <label for="company_name">0 則 </label>
+                                </div>
+                            </div>
+                        </div>
+                       
+                 </div>
+
+                </div>
+                <!--登入記錄標籤內容區-->
+                <div class="tab-pane fade p-3" id="contact" role="tabpanel" aria-labelledby="lgHistory-tab" style="max-height: 500px; overflow-y: auto;">
+                    <div class="mb-2">    <span>*資料僅限用於異常帳號處理與優化行銷</span></div>
+                    <div class="d-flex gap-2 align-items-center  mb-3">
+                        <span>指定最晚日期</span>
+                        <input id="logDate" class="form-control" type="date" style="width:20%" />
+                    </div>
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col" >#</th>
+                                <th scope="col" style="width:10%">登入時間</th>
+                                <th scope="col">IP</th>
+                                <th scope="col" style="width:30%">地區</th>
+                                <th scope="col">瀏覽器與系統</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <!-- 假資料放這裡 -->
+                        </tbody>
+                    </table>
+                    <div class="d-flex justify-content-center">
+                        <button id="load-more-btn" class="btn btn-primary">載入5筆</button>
+                    </div>
+                 
+                </div>
+            </div><!-- End Default Tabs -->
+        </div>
+    </div>
+</div>
+@section  Scripts {
+@*     <script src="~/js/owenscript/adminmemberlist.js" asp-append-version="true"></script> *@
+    <script src="
+https://cdn.jsdelivr.net/npm/moment@2.30.1/moment.min.js
+        ">//格式化日期的插件</script>
+    <script>
+        //紀錄當前會員資訊變數
+        let currentMemberId = 0;
+        let currentMemberData = null;
+        //登入記錄控制變數初始化
+        let loadedDataCount = 0;
+        let remain = true;
+        let lastDate = new Date()
+        lastDate.setDate(lastDate.getDate()+1)
+        lastDate = moment(lastDate).format('YYYY-MM-DD')
+
+        //偵測指定最晚登入記錄時間input變化
+        document.getElementById('logDate').addEventListener('change', changeLogDate);
+        function changeLogDate(e){
+            lastDate = new Date(e.target.value);
+            lastDate.setDate(lastDate.getDate() + 1)
+            lastDate = moment(lastDate).format('YYYY-MM-DD')
+            document.getElementById('table-body').innerHTML = "";
+            loadedDataCount = 0
+            remain = true;
+            document.getElementById('load-more-btn').disabled = false;
+            document.getElementById('load-more-btn').innerHTML = "載入5筆";
+            loadMoreData();
+        }
+
+        //取得登入記錄資料
+        async function getData() {
+            const data = [];
+            const toPush = await fetchLoginHistory()
+            if (toPush === null) { return null; }
+            toPush.forEach((element) => {     
+                data.push({
+                    id: ++loadedDataCount ,
+                    loginTime: element.fLoginDateTime,
+                    ip: element.fLoginIp,
+                    region: element.fLoginGeoInfo,
+                    browserSystem: element.fLoginBrowerNos
+                }); })
+            return data;
+        }
+        async function fetchLoginHistory(){
+            const response = await fetch(`@Url.Content("~/AdminMember/LoginHistory")?memberId=${currentMemberId}&toSkip=${loadedDataCount}&lastDate=${lastDate}`, {
+                method: 'GET'
+            })
+    const data = await response.json();
+            if (response.ok) {
+                return data
+            } else {
+                return null;
+            }
+        }
+
+        function insertDataToTable(data) {
+            const tbody = document.getElementById('table-body');
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                <th scope="row">${item.id}</th>
+                        <td>${moment(item.loginTime).format('YYYY/MM/DD HH:mm:ss')}</td>
+                <td>${item.ip}</td>
+                <td>${item.region}</td>
+                <td>${item.browserSystem}</td>
+              `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // 載入更多登入記錄資料
+        async function loadMoreData() {
+            if (remain !== false) {
+                const newData = await getData();
+                if (newData === null) { return; }
+                if (newData.length < 5) { remain = false}
+                insertDataToTable(newData);
+     
+                }
+                // 檢查是否載入所有資料
+                if (remain ===false) {
+                    document.getElementById('load-more-btn').disabled = true;
+                    document.getElementById('load-more-btn').innerHTML = "已無紀錄可載入";
+                }
+            }
+
+        //載入更多登入記錄資料的點擊事件
+        document.getElementById('load-more-btn').addEventListener('click', loadMoreData);
+
+        //點擊登入紀錄標籤
+        document.getElementById("lgHistory-tab").addEventListener('click', () => {
+            //初始化控制變數
+            document.getElementById('table-body').innerHTML=""
+            remain = true;
+            loadedDataCount = 0;
+            lastDate = new Date()
+            lastDate.setDate(lastDate.getDate() + 1)
+            lastDate = moment(lastDate).format('YYYY-MM-DD')
+            document.getElementById('logDate').value=""
+            document.getElementById('load-more-btn').disabled = false;
+            document.getElementById('load-more-btn').innerHTML = "載入5筆";
+            //載入資料
+            loadMoreData();
+        })
+    </script>
+    <script>
+        //會員清單頁面載入
+        let dataTable; // 這段要記得加，先宣告datatable的變數
+        $(document).ready(function () {
+            loadDataTable();
+        })
+        function loadDataTable() {
+            // html 欄位跟 ajax 的欄位務必相同
+            dataTable = $('#memberListTable').DataTable({
+                columnDefs: [
+                    {
+                        targets: '_all',
+                        className: 'dt-body-left dt-head-left'
+                    }
+                ],
+                "ajax": { url: '/AdminMember/ListDataJson' },
+                "columns": [
+                    { data: 'memberId', "width": "5%" },
+                    { data: 'registerDateTime', "width": "12%" },
+                    { data: 'realName', "width": "8%" },
+                    { data: 'showName', "width": "10%" },
+                    { data: 'email', "width": "15%" },
+                    { data: 'emailVerification', "width": "7%" },
+                    { data: 'getCampInfo', "width": "8%" },
+                    { data: 'status', "width": "7%" },
+                    {
+                        // 這段是新增及刪除按鈕 ， 刪除用到onclick 事件，觸發下方的Delete
+                        data: 'memberId',
+                        "render": function (data) {
+                            return `<div class="" role="">
+                                                                <button  onclick="loadMemDetail('${data}')" memberId="${data}" class="btn btn-primary mx-2" data-bs-toggle="modal" data-bs-target="#staticBackdrop"><i class="fa-solid fa-gear"></i></button >
+                            </div>`
+                        },
+                        "width": "5%"
+                    },
+                ],
+                language: {
+                    url: "https://cdn.datatables.net/plug-ins/1.13.7/i18n/zh-HANT.json"
+                },
+                order: [[0, 'dsc']]
+
+
+            });
+        }
+        //載入單筆會員資料
+        async function loadMemDetail(memberId) {
+          
+            if (isNaN(memberId)) {
+                callSwalError("系統異常請稍後再試")
+                return;
+            }  
+            currentMemberId = Number(memberId);
+            await fetchMemberDetail(currentMemberId)
+            if (currentMemberData === null) { return; }
+            document.querySelector('#curMemId').innerHTML = currentMemberId;
+            document.querySelector('#currealName').innerHTML = currentMemberData.realName;
+            document.querySelector('#curMemEmail').innerHTML = currentMemberData.email;
+            await loadMemberBasicInfo()
+            await loadMemPhoto(currentMemberId)
+            var basicTab= document.querySelector('#basic-tab')
+            var tab = new bootstrap.Tab(basicTab)
+            tab.show()
+        }
+
+        //取得單筆會員資料
+        async function fetchMemberDetail(memberId) {
+            const response = await fetch(`@Url.Content("~/AdminMember/Detail")?id=${memberId}`, {
+                "method": "GET",
+            });
+            if (!response.ok) {
+                callSwalError("系統異常請稍後再試")
+                return;
+                }
+            const data = await response.json();
+            currentMemberData = data;
+        }
+
+        //載入會員基本資訊
+        function loadMemberBasicInfo(){
+            if (currentMemberData === null) { 
+                callSwalError("系統異常")
+                return; }
+            document.getElementById('memRegDate').innerHTML = currentMemberData.regDate
+            document.getElementById('memEmail').innerHTML = currentMemberData.email
+            document.getElementById('memEmailVertify').innerHTML = currentMemberData.emailVerification
+            document.getElementById('memStatus').innerHTML = currentMemberData.status
+            if (currentMemberData.emailVerification === "已驗證") {
+                document.getElementById('memEmailVertify').classList.replace("text-danger", "text-success")
+            }else{
+                document.getElementById('memEmailVertify').classList.replace("text-success", "text-danger")
+            }
+            setStatusBtn()
+
+
+            document.getElementById('memConnectAccount').innerHTML = currentMemberData.note
+            document.getElementById('realName').value = currentMemberData.realName
+            document.getElementById('showName').value = currentMemberData.showName
+            document.getElementById('phone').value = currentMemberData.phone
+            document.getElementById('birth').value = currentMemberData.birth
+            document.getElementById('memGender').innerHTML = currentMemberData.gender
+
+        }
+        //點擊其他資訊標籤
+        document.getElementById("other-tab").addEventListener('click', () => {
+            loadMemberOtherInfo()
+        })
+        function loadMemberOtherInfo() {
+            document.getElementById('memGetCampInfo').innerHTML = currentMemberData.getCampInfo
+            document.getElementById('memJob').innerHTML = currentMemberData.job
+            document.getElementById('memEducation').innerHTML = currentMemberData.education
+            document.getElementById('memCities').innerHTML = stringArrayJoin(currentMemberData.cities)
+            document.getElementById('memWishField').innerHTML = stringArrayJoin(currentMemberData.wishFields)
+        }
+        function stringArrayJoin(arr) {
+            if (!Array.isArray(arr)) { callSwalError("系統異常"); return; }
+            if (arr.length === 0) { return "未填寫"; }
+            return arr.join("、")
+        }
+        //取得會員頭像
+        async function loadMemPhoto(memberId) {
+            resetMemPhoto()
+            try {
+                const response = await fetch(`@Url.Content("~/AdminMember/MemberPhoto")?id=${memberId}`, {
+                    method: "GET",
+                });
+                let photoUrl = '';
+                photoUrl = await response.text();
+                if (photoUrl !== '') {
+                deleteBtn.disabled = false;
+                deleteBtn.title = "移除違規頭像";
+                deleteBtnIcn.style.color = 'red'
+                    document.getElementById("memPhoto").title = `會員編號 ${currentMemberId} 頭像`;
+                    document.getElementById("memPhoto").src = photoUrl;
+                }
+            } catch (error) {
+                callSwalError(`載入圖片失敗：${error}`);
+            }
+        };
+
+        //移除會員違規頭像
+        async function removeMemPhoto() {
+            Swal.fire({
+                title: `確認移除會員編號${currentMemberId}的違規頭像？`,
+                text: "",
+                icon: "info",
+                showCancelButton: true,
+                confirmButtonColor: "#30C2EC",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "確定",
+                cancelButtonText: "取消"
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`@Url.Content("~/AdminMember/RemoveMemberPhoto")?id=${currentMemberId}`, {
+                            method: "POST",
+                        });
+                        if (!response.ok) { throw new Error(response.statusText); }
+                        resetMemPhoto()
+                        Swal.fire({
+                            position: "center",
+                            icon: "info",
+                            title: "已刪除會員違規頭像",
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                    } catch (error) {
+                        callSwalError(`${error}`);
+                    }
+                }
+            })
+        }
+        //停權按鈕
+        async function changeStatus() {
+            let showtext = "";
+            if (currentMemberData.status === "正常") {
+                showtext = '（會員將無法登入）'
+            }
+            let action = document.getElementById('statusBtn').innerHTML
+            Swal.fire({
+                title: `確認${action}會員編號${currentMemberId}的帳號？`,
+                text: showtext,
+                icon: "info",
+                showCancelButton: true,
+                confirmButtonColor: "#30C2EC",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "確定",
+                cancelButtonText: "取消"
+            }).then(async (result) => {
+                if (!result.isConfirmed) {return}
+                if ( await changePropertyValue("status", action)) {
+                    if (action === "停權") {currentMemberData.status="停權中" }
+                    if (action === "恢復") { currentMemberData.status = "正常" }
+                    setStatusBtn()
+                    dataTable.ajax.reload();
+                }
+            })
+        }
+        function setStatusBtn(){
+            if (currentMemberData.status === "正常") {
+                document.getElementById('memStatus').innerHTML = currentMemberData.status
+                document.getElementById('memStatus').classList.replace("text-danger", "text-success")
+                document.getElementById('statusBtn').classList.replace("btn-success", "btn-danger")
+                document.getElementById('statusBtn').innerHTML = "停權";
+            } else {
+                document.getElementById('memStatus').innerHTML = currentMemberData.status
+                document.getElementById('memStatus').classList.replace("text-success", "text-danger")
+                document.getElementById('statusBtn').classList.replace("btn-danger", "btn-success")
+                document.getElementById('statusBtn').innerHTML = "恢復";
+            }
+        }
+
+        document.querySelectorAll(".editValue").forEach((e) => { e.addEventListener("click", (e) => {
+                if (e.target.tagName === "I" && e.target.classList.contains("fa-pen-to-square")) {
+                    const prop = e.target.getAttribute("editProp")
+                    e.target.closest(".editValue").innerHTML = `<div class=" d-flex gap-3"><i title="儲存" editProp="${prop}"  class="fa-solid fa-check"></i><i title="取消"editProp="${prop}" class="fa-solid fa-x"></i></div>`;
+                    document.getElementById(`${prop}`).disabled = false
+                    document.getElementById(`${prop}`).focus()
+                }
+                if (e.target.tagName === "I" && e.target.classList.contains("fa-x")) {
+                    const prop = e.target.getAttribute("editProp")
+                    e.target.closest(".editValue").innerHTML = `<i editProp="${prop}" class="fa-solid fa-pen-to-square"></i>`
+                    document.getElementById(`${prop}`).disabled = true 
+                    document.getElementById(`${prop}`).value = currentMemberData[`${prop}`]
+                }
+                if (e.target.tagName === "I" && e.target.classList.contains("fa-check")) {
+                    const prop = e.target.getAttribute("editProp")
+                    const newValue = document.getElementById(`${prop}`).value
+                    try{
+                        Swal.fire({
+                            title: `確認編輯資訊為  ${newValue}？`,
+                            icon: "info",
+                            showCancelButton: true,
+                            confirmButtonColor: "#30C2EC",
+                            cancelButtonColor: "#d33",
+                            confirmButtonText: "確定",
+                            cancelButtonText: "取消"
+                        }).then(async (result) => {
+                            if (!result.isConfirmed) { return }
+                            if (await changePropertyValue(prop, newValue)) {
+                                e.target.closest(".editValue").innerHTML = `<i editProp="${prop}" class="fa-solid fa-pen-to-square"></i>`
+                                document.getElementById(`${prop}`).disabled = true
+                                currentMemberData[`${prop}`] = newValue
+                            }
+                        })
+
+                    }catch{
+                        callSwalError("系統異常，請稍後再試")
+                    }
+
+        
+                        }
+
+        }) })
+
+        async function changePropertyValue(property, value) {
+            try {
+                const response = await fetch(`@Url.Content("~/AdminMember/ChangeValue")?id=${currentMemberId}&property=${property}&changeTo=${value}`, {
+                    method: "POST",
+                });
+                if (!response.ok) { let errMsg = await response.text(); callSwalError(errMsg); return false}
+                Swal.fire({
+                    position: "center",
+                    icon: "info",
+                    title: "成功變更",
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                return true
+            } catch (error) {
+                callSwalError(`${error}`);
+                return false
+            }
+        }
+
+        //SweetAlert失敗訊息
+            function callSwalError(text) {
+                Swal.fire({
+                    position: "center",
+                    icon: "error",
+                    title: text,
+                    showConfirmButton: false,
+                    timer: 1500
+                })
+            }
+            function resetMemPhoto(){
+            const deleteBtn = document.getElementById("deleteBtn");
+            const deleteBtnIcn = document.getElementById("deleteBtnIcn");
+            deleteBtn.disabled = true;
+            document.getElementById("memPhoto").src = "/images/owenadd/membernophoto.jpg"
+            document.getElementById("memPhoto").title = "會員沒有頭像";
+            deleteBtnIcn.style.color = 'grey'
+            }
+    </script>
+}
